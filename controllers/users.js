@@ -6,7 +6,7 @@ const getUsers = (req, res) => {
     .catch((err) => res
       .status(500)
       .send({
-        message: 'Internal Server Error',
+        message: 'На сервере произошла ошибка',
         err: err.message,
         stack: err.stack,
       }));
@@ -15,13 +15,13 @@ const getUsers = (req, res) => {
 const createUser = (req, res) => {
   User.create(req.body)
     .then((user) => res.status(201).send(user))
-    .catch((err) => res
-      .status(500)
-      .send({
-        message: 'Internal Server Error',
-        err: err.message,
-        stack: err.stack,
-      }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(400).send({ message: 'Переданы некорректные данные' });
+      } else {
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
+      }
+    });
 };
 
 const getUserById = (req, res) => {
@@ -33,13 +33,13 @@ const getUserById = (req, res) => {
         res
           .status(404)
           .send({
-            message: 'User not found',
+            message: 'Пользователь не найден',
           });
       } else {
         res
           .status(500)
           .send({
-            message: 'Internal Server Error',
+            message: 'На сервере произошла ошибка',
             err: err.message,
             stack: err.stack,
           });
