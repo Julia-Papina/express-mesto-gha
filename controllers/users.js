@@ -26,23 +26,18 @@ const createUser = (req, res) => {
 
 const getUserById = (req, res) => {
   User.findById(req.params.userId)
-    .orFail(() => new Error('Not found'))
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.message === 'Not found') {
-        res
-          .status(404)
-          .send({
-            message: 'Пользователь не найден',
-          });
+    .then((user) => {
+      if (!user) {
+        res.status(404).send({ message: 'Пользователь не найден' });
       } else {
-        res
-          .status(500)
-          .send({
-            message: 'На сервере произошла ошибка',
-            err: err.message,
-            stack: err.stack,
-          });
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(400).send({ message: 'Переданы некорректные данные' });
+      } else {
+        res.status(500).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
