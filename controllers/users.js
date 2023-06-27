@@ -54,9 +54,9 @@ const updateUserFields = (req, res, updateFields) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
