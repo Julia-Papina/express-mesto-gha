@@ -1,15 +1,15 @@
 const User = require('../models/user');
 
+const ERROR_BAD_REQUEST = 400;
+const ERROR_NOT_FOUND = 404;
+const ERROR_DEFAULT = 500;
+
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.status(200).send(users))
-    .catch((err) => res
-      .status(500)
-      .send({
-        message: 'На сервере произошла ошибка',
-        err: err.message,
-        stack: err.stack,
-      }));
+    .catch(() => res
+      .status(ERROR_DEFAULT)
+      .send({ message: 'На сервере произошла ошибка' }));
 };
 
 const createUser = (req, res) => {
@@ -17,9 +17,9 @@ const createUser = (req, res) => {
     .then((user) => res.status(201).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
@@ -28,16 +28,16 @@ const getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: 'Пользователь не найден' });
+        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден' });
       } else {
         res.send(user);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(400).send({ message: 'Переданы некорректные данные' });
+        res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       } else {
-        res.status(500).send({ message: 'На сервере произошла ошибка' });
+        res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
       }
     });
 };
