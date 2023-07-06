@@ -1,9 +1,11 @@
 const bcript = require('bcryptjs');
+const jsonWebToken = require('jsonwebtoken');
 const User = require('../models/user');
 
 const OK = 200;
 const CREATED = 201;
 const ERROR_BAD_REQUEST = 400;
+const ERROR_FORBIDDEN = 403;
 const ERROR_NOT_FOUND = 404;
 const ERROR_DEFAULT = 500;
 
@@ -42,9 +44,17 @@ const login = (req, res, next) => {
       bcript.compare(String(password), user.password)
         .then((isValidUser) => {
           if (isValidUser) {
-            res.send(user);
+            const jwt = jsonWebToken.sign({
+              _id: user._id,
+            }, 'SECRET');
+            res.cookie('jwt', jwt, {
+              maxAge: 360000,
+              httpOnly: true,
+              sameSite: true,
+            });
+            res.send(user.toJSON());
           } else {
-            res.status(403).send({ message: 'Непраильный пароль' });
+            res.status(ERROR_FORBIDDEN).send({ message: 'Неправильная почта или пароль' });
           }
         });
     })
