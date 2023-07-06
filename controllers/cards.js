@@ -1,12 +1,14 @@
 const Card = require('../models/card');
 
+const OK = 200;
+const CREATED = 201;
 const ERROR_BAD_REQUEST = 400;
 const ERROR_NOT_FOUND = 404;
 const ERROR_DEFAULT = 500;
 
 const getCards = (req, res) => {
   Card.find({})
-    .then((card) => res.status(200).send(card))
+    .then((card) => res.status(OK).send(card))
     .catch(() => res
       .status(ERROR_DEFAULT)
       .send({ message: 'На сервера произошла ошибка' }));
@@ -17,7 +19,7 @@ const createCard = (req, res) => {
     ...req.body,
     owner: req.user._id,
   })
-    .then((card) => res.status(201).send(card))
+    .then((card) => res.status(CREATED).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
@@ -55,7 +57,6 @@ const addCardLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     {
       new: true,
-      runValidators: true,
     },
   )
     .then((card) => {
@@ -80,7 +81,6 @@ const deleteCardLike = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     {
       new: true,
-      runValidators: true,
     }, // обработчик then получит на вход обновлённую запись
   )
     .then((card) => {

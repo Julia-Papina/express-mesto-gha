@@ -1,27 +1,54 @@
+const bcript = require('bcryptjs');
 const User = require('../models/user');
 
+const OK = 200;
+const CREATED = 201;
 const ERROR_BAD_REQUEST = 400;
 const ERROR_NOT_FOUND = 404;
 const ERROR_DEFAULT = 500;
 
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.status(200).send(users))
+    .then((users) => res.status(OK).send(users))
     .catch(() => res
       .status(ERROR_DEFAULT)
       .send({ message: 'На сервере произошла ошибка' }));
 };
 
-const createUser = (req, res) => {
-  User.create(req.body)
-    .then((user) => res.status(201).send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
-      } else {
-        res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
-      }
+const createUser = (req, res, next) => {
+  bcript.hash(String(req.body.password), 10)
+    .then((hashedPassword) => {
+      User.create({
+        ...req.body, password: hashedPassword,
+      })
+        .then((user) => res.status(CREATED).send(user))
+        .catch((err) => {
+          if (err.name === 'ValidationError') {
+            res.status(ERROR_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+          } else {
+            res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
+          }
+        })
+        .catch(next);
     });
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+  User.findOne({ email })
+    .select('+password')
+    .orFail(() => new Error('Пользователь не найден'))
+    .then((user) => {
+      bcript.compare(String(password), user.password)
+        .then((isValidUser) => {
+          if (isValidUser) {
+            res.send(user);
+          } else {
+            res.status(403).send({ message: 'Непраильный пароль' });
+          }
+        });
+    })
+    .catch(next);
 };
 
 const getUserById = (req, res) => {
@@ -77,4 +104,5 @@ module.exports = {
   createUser,
   updateUser,
   updateUserAvatar,
+  login,
 };
