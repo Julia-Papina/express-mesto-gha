@@ -7,11 +7,12 @@ const {
   updateUser,
   updateUserAvatar,
 } = require('../controllers/users');
+const { validateUpdateUser, validateUpdateAvatar, validateUserId } = require('../middlwares/validation'); // validateUpdateUser
 
 router.get('/', getUsers);
 router.get('/me', getUserInfo);
-router.get('/:userId', getUserById);
-router.patch('/me', updateUser);
-router.patch('/me/avatar', updateUserAvatar);
+router.get('/:userId', validateUserId, getUserById);
+router.patch('/me', validateUpdateUser, updateUser);
+router.patch('/me/avatar', validateUpdateAvatar, updateUserAvatar);
 
 module.exports = router;
