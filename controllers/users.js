@@ -22,7 +22,7 @@ const createUser = (req, res, next) => {
       User.create({
         ...req.body, password: hashedPassword,
       })
-        .then((user) => res.status(CREATED).send({ user, message: 'Пользователь успешно зарегистрирован' }))
+        .then((user) => res.status(CREATED).send(user))
         .catch((err) => {
           if (err.name === 'ValidationError') {
             next(new BadRequestError('Переданы некорректные данные'));
