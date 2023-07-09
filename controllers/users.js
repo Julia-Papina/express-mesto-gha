@@ -37,6 +37,11 @@ const createUser = (req, res, next) => {
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(ERROR_FORBIDDEN).send({ message: 'Введите данные' });
+  }
+
   User.findOne({ email })
     .select('+password')
     .orFail(() => new Error('Пользователь не найден'))
@@ -46,13 +51,14 @@ const login = (req, res, next) => {
           if (isValidUser) {
             const jwt = jsonWebToken.sign({
               _id: user._id,
-            }, 'SECRET');
+            }, process.env.JWT_SECRET);
             res.cookie('jwt', jwt, {
               maxAge: 360000,
               httpOnly: true,
               sameSite: true,
             });
             res.send(user.toJSON());
+            console.log('аутентификация прошла успешно');
           } else {
             res.status(ERROR_FORBIDDEN).send({ message: 'Неправильная почта или пароль' });
           }
@@ -77,6 +83,25 @@ const getUserById = (req, res) => {
         res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' });
       }
     });
+};
+
+const getUserInfo = (req, res) => {
+  const id = req.user._id;
+  User.findById(id)
+    .then((user) => {
+      if (!user) {
+        res.status(ERROR_NOT_FOUND).send({ message: 'Пользователь не найден' });
+      } else {
+        res.send({
+          _id: user._id,
+          name: user.name,
+          about: user.about,
+          avatar: user.avatar,
+          email: user.email,
+        });
+      }
+    })
+    .catch(() => res.status(ERROR_DEFAULT).send({ message: 'На сервере произошла ошибка' }));
 };
 
 const updateUserFields = (req, res, updateFields) => {
@@ -111,6 +136,7 @@ const updateUserAvatar = (req, res) => {
 module.exports = {
   getUsers,
   getUserById,
+  getUserInfo,
   createUser,
   updateUser,
   updateUserAvatar,
