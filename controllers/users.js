@@ -22,7 +22,7 @@ const createUser = (req, res, next) => {
       User.create({
         ...req.body, password: hashedPassword,
       })
-        .then(() => res.status(CREATED).send({ message: 'Пользователь успешно зарегистрирован' }))
+        .then((user) => res.status(CREATED).send({ user, message: 'Пользователь успешно зарегистрирован' }))
         .catch((err) => {
           if (err.name === 'ValidationError') {
             next(new BadRequestError('Переданы некорректные данные'));
@@ -44,7 +44,7 @@ const login = (req, res, next) => {
 
   User.findOne({ email })
     .select('+password')
-    .orFail(() => new NotFoundError('Пользователь не найден'))
+    .orFail(() => new UnauthorizedError('Пользователь не найден, авторизуйтесь'))
     .then((user) => {
       bcript.compare(String(password), user.password)
         .then((isValidUser) => {
